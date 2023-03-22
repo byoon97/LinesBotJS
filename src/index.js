@@ -13,6 +13,16 @@ client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
 
+client.on("interactionCreate", (interaction) => {
+  if (!interaction.isChatInputCommand) return;
+
+  if (interaction.commandName === "lines") {
+    const sport = interaction.options.get("games")?.value;
+
+    console.log(sport);
+  }
+});
+
 client.on("messageCreate", (message) => {
   if (message.author.bot) {
     return;
@@ -23,4 +33,4 @@ client.on("messageCreate", (message) => {
   }
 });
 
-client.login(process.env.CLIENT_TOKEN); //login bot using token
+client.login(process.env.CLIENT); //login bot using token
