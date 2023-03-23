@@ -40,23 +40,22 @@ const commands = [
   },
 ];
 
-client.on("guildCreate", (Guild) => {
-  const guildId = Guild.id;
+client.on("ready", async () => {
+  console.log(`Logged in as ${client.user.tag}!`);
 
-  const rest = new REST({ version: "10" }).setToken(process.env.CLIENT);
-
-  (async () => {
+  // Send the slash command payload to all servers the bot is a member of
+  for (const guild of client.guilds.cache.values()) {
     try {
-      console.log("registering slash commands");
-
+      const rest = new REST({ version: "10" }).setToken(process.env.CLIENT);
       await rest.put(
-        Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
+        Routes.applicationGuildCommands(client.user.id, guild.id),
         { body: commands }
       );
-
-      console.log("slash commands done");
+      console.log(`Slash command registered in server ${guild.name}`);
     } catch (error) {
-      console.log(`There was an error: ${error}`);
+      console.error(error);
     }
-  })();
+  }
 });
+
+client.login(process.env.CLIENT); //login bot using token
