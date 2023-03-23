@@ -21,18 +21,19 @@ client.on("interactionCreate", async (interaction) => {
     const league = interaction.options.get("games")?.value;
     let sport;
 
+    // Getting the sport to be able to create a link to covers.com
     if (league == "NBA" || league == "NCAAB") sport = "basketball";
     if (league == "NFL" || league == "NCAAF") sport = "football";
     if (league == "NHL") sport = "hockey";
     if (league == "MLB") sport = "baseball";
 
-    console.log(sport, league);
-
+    // Function to create the covers.com link for every team
     const createLink = (str) => {
       let team = str.replace(/\s+/g, "-");
       return `https://www.covers.com/sport/${sport}/${league}/teams/main/${team}`;
     };
 
+    // fetching the lines data
     try {
       let { data } = await axios.get(
         `https://jsonodds.com/api/odds/${league}`,
@@ -43,13 +44,27 @@ client.on("interactionCreate", async (interaction) => {
         }
       );
 
-      // let embedsArr = [];
-
+      // iterating through each game
       data.forEach(async (game) => {
         let odds = game.Odds.filter((e) => e.OddType === "Game")[0];
 
+        // creating the links with the conversion function above
         let awayTeamLink = createLink(game.AwayTeam);
         let homeTeamLink = createLink(game.HomeTeam);
+
+        // converting the time to EST
+        const utcDate = new Date(game.MatchTime);
+        const options = {
+          timeZone: "America/New_York",
+          timeZoneName: "short",
+          hour12: true,
+        };
+        const estDate = new Date(utcDate.toLocaleString("en-US", options));
+        const fourHoursAgo = new Date(estDate.getTime() - 4 * 60 * 60 * 1000);
+
+        console.log(fourHoursAgo.toLocaleString("en-US", options));
+
+        console.log(estDate);
 
         await interaction.channel.send({
           embeds: [
@@ -76,20 +91,22 @@ client.on("interactionCreate", async (interaction) => {
                   odds.PointSpreadHome[0] === "-"
                     ? odds.PointSpreadHome
                     : "+" + odds.PointSpreadHome
-                }, ${odds.PointSpreadHomeLine}`,
+                }, ${odds.PointSpreadHomeLine}, ML ${
+                  odds.MoneyLineHome[0] === "-"
+                    ? odds.MoneyLineHome
+                    : "+" + odds.MoneyLineHome
+                }`,
                 value: homeTeamLink,
                 inline: true,
               })
               .addFields({
                 name: "Over/Under",
-                value: `Over, ${odds.TotalNumber}, ${odds.OverLine}, Under, ${
-                  odds.TotalNumber
-                }, ${odds.UnderLine}, ML ${
-                  odds.MoneyLineHome[0] === "-"
-                    ? odds.MoneyLineHome
-                    : "+" + odds.MoneyLineHome
-                }`,
+                value: `Over, ${odds.TotalNumber}, ${odds.OverLine}, Under, ${odds.TotalNumber}, ${odds.UnderLine}`,
                 inline: true,
+              })
+              .addFields({
+                name: "time",
+                value: `${fourHoursAgo.toLocaleString("en-US", options)}`,
               }),
           ],
         });
