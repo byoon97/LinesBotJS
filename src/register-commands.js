@@ -1,5 +1,20 @@
 require("dotenv").config();
-const { REST, Routes, ApplicationCommandOptionType } = require("discord.js");
+const {
+  Client,
+  REST,
+  Routes,
+  ApplicationCommandOptionType,
+  IntentsBitField,
+} = require("discord.js");
+
+const client = new Client({
+  intents: [
+    IntentsBitField.Flags.Guilds,
+    IntentsBitField.Flags.GuildMembers,
+    IntentsBitField.Flags.GuildMessages,
+    IntentsBitField.Flags.MessageContent,
+  ],
+});
 
 const commands = [
   {
@@ -25,22 +40,23 @@ const commands = [
   },
 ];
 
-const rest = new REST({ version: "10" }).setToken(process.env.CLIENT);
+client.on("guildCreate", (Guild) => {
+  const guildId = Guild.id;
 
-(async () => {
-  try {
-    console.log("registering slash commands");
+  const rest = new REST({ version: "10" }).setToken(process.env.CLIENT);
 
-    await rest.put(
-      Routes.applicationGuildCommands(
-        process.env.CLIENT_ID,
-        process.env.GUILD_ID
-      ),
-      { body: commands }
-    );
+  (async () => {
+    try {
+      console.log("registering slash commands");
 
-    console.log("slash commands done");
-  } catch (error) {
-    console.log(`There was an error: ${error}`);
-  }
-})();
+      await rest.put(
+        Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
+        { body: commands }
+      );
+
+      console.log("slash commands done");
+    } catch (error) {
+      console.log(`There was an error: ${error}`);
+    }
+  })();
+});
