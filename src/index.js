@@ -124,7 +124,7 @@ client.on("interactionCreate", async (interaction) => {
                     gameData[0].HomeScore === null &&
                     gameData[0].AwayScore === null
                       ? "Not Yet Started"
-                      : `${gameData.AwayScore} - ${game.HomeTeam}`
+                      : `${gameData.AwayScore} - ${game.HomeScore}`
                   }`,
                 }),
             ],
